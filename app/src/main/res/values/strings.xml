@@ -12,5 +12,6 @@
     <string name="auth_error_empty_fields">Заполните email и пароль</string>
 
     <string name="action_logout">Выйти</string>
+    <string name="action_retry">Повторить</string>
 
 </resources>

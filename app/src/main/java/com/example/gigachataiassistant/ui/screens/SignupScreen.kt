@@ -18,6 +18,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -35,6 +36,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.gigachataiassistant.R
 import com.example.gigachataiassistant.data.auth.AuthRepositoryImpl
 import com.example.gigachataiassistant.ui.auth.AuthErrorMapper
 import com.example.gigachataiassistant.ui.auth.AuthViewModel
@@ -57,12 +59,28 @@ fun SignupScreen(
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val errorMessageId = uiState.errorMessageId
-    val snackbarText = if (errorMessageId != null) stringResource(errorMessageId) else null
-    LaunchedEffect(snackbarText) {
-        val text = snackbarText ?: return@LaunchedEffect
-        snackbarHostState.showSnackbar(text)
-        viewModel.clearError()
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+
+    val errorId = uiState.errorMessageId
+    val messageText = if (errorId != null) stringResource(errorId) else null
+    val isNetworkError = errorId == R.string.auth_error_network
+    val retryLabel = stringResource(R.string.action_retry)
+
+    LaunchedEffect(errorId, messageText, isNetworkError) {
+        val msg = messageText ?: return@LaunchedEffect
+        val result = if (isNetworkError) {
+            snackbarHostState.showSnackbar(
+                message = msg,
+                actionLabel = retryLabel,
+            )
+        } else {
+            snackbarHostState.showSnackbar(msg)
+        }
+        when (result) {
+            SnackbarResult.ActionPerformed -> viewModel.signIn(email, password)
+            else -> viewModel.clearError()
+        }
     }
 
     LaunchedEffect(uiState.navigateToChats) {
@@ -71,8 +89,6 @@ fun SignupScreen(
             viewModel.consumeNavigateToChats()
         }
     }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
