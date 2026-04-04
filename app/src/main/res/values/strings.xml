@@ -29,4 +29,12 @@
     <string name="chat_share">Поделиться</string>
     <string name="chat_cd_back">Назад</string>
 
+    <string name="profile_title">Профиль</string>
+    <string name="profile_email_label">Email</string>
+    <string name="profile_theme_label">Тема приложения</string>
+    <string name="profile_theme_light">Светлая</string>
+    <string name="profile_theme_dark">Темная</string>
+    <string name="profile_theme_system">Системная</string>
+    <string name="profile_cd_avatar">Аватар пользователя</string>
+
 </resources>
