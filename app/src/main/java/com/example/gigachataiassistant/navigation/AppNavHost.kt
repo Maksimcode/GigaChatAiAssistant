@@ -33,8 +33,9 @@ fun AppNavHost(
     navController: NavHostController = rememberNavController(),
 ) {
     val authRepository = remember { AuthRepositoryImpl() }
+    val firebaseAuth = FirebaseAuth.getInstance()
     val startDestination =
-        if (FirebaseAuth.getInstance().currentUser != null) ChatsDestination else LoginDestination
+        if (firebaseAuth.currentUser != null) ChatsDestination else LoginDestination
 
     NavHost(
         navController = navController,
@@ -63,11 +64,12 @@ fun AppNavHost(
         }
         composable<ChatsDestination> {
             val context = LocalContext.current
+            val currentUserId = firebaseAuth.currentUser?.uid ?: ""
             val chatRepository = remember {
                 ChatRepositoryImpl(AppDatabase.getInstance(context.applicationContext).chatDao())
             }
             val chatListViewModel: ChatListViewModel = viewModel(
-                factory = ChatListViewModelFactory(chatRepository),
+                factory = ChatListViewModelFactory(currentUserId, chatRepository),
             )
             ChatListScreen(
                 viewModel = chatListViewModel,
@@ -81,6 +83,7 @@ fun AppNavHost(
         composable<ChatDestination> { entry ->
             val route = entry.toRoute<ChatDestination>()
             val context = LocalContext.current
+            val currentUserId = firebaseAuth.currentUser?.uid ?: ""
             val db = remember {
                 AppDatabase.getInstance(context.applicationContext)
             }
@@ -97,6 +100,7 @@ fun AppNavHost(
                 key = route.chatId,
                 factory = ChatViewModelFactory(
                     chatId = route.chatId,
+                    userId = currentUserId,
                     messageRepository = messageRepository,
                     chatRepository = chatRepository,
                     gigaChat = gigaChat,

@@ -8,6 +8,7 @@ import com.example.gigachataiassistant.data.gigachat.GigaChatRemoteDataSource
 
 class ChatViewModelFactory(
     private val chatId: String,
+    private val userId: String,
     private val messageRepository: MessageRepository,
     private val chatRepository: ChatRepository,
     private val gigaChat: GigaChatRemoteDataSource,
@@ -18,6 +19,7 @@ class ChatViewModelFactory(
         if (modelClass.isAssignableFrom(ChatViewModel::class.java)) {
             return ChatViewModel(
                 chatId = chatId,
+                userId = userId,
                 messageRepository = messageRepository,
                 chatRepository = chatRepository,
                 gigaChat = gigaChat,

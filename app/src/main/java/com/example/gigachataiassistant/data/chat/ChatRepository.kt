@@ -6,9 +6,9 @@ import kotlinx.coroutines.flow.Flow
 
 interface ChatRepository {
 
-    fun observeChats(searchQuery: String): Flow<PagingData<ChatEntity>>
+    fun observeChat(chatId: String, userId: String): Flow<ChatEntity?>
 
-    fun observeChat(chatId: String): Flow<ChatEntity?>
+    fun observeChats(userId: String, searchQuery: String): Flow<PagingData<ChatEntity>>
 
-    suspend fun createChat(title: String): String
+    suspend fun createChat(userId: String, title: String): String
 }

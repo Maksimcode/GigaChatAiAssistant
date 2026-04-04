@@ -25,6 +25,7 @@ data class ChatUiState(
 
 class ChatViewModel(
     private val chatId: String,
+    private val userId: String,
     private val messageRepository: MessageRepository,
     private val chatRepository: ChatRepository,
     private val gigaChat: GigaChatRemoteDataSource,
@@ -42,7 +43,7 @@ class ChatViewModel(
             }
         }
         viewModelScope.launch {
-            chatRepository.observeChat(chatId).collect { chat ->
+            chatRepository.observeChat(chatId, userId).collect { chat ->
                 _uiState.update { it.copy(title = chat?.title.orEmpty()) }
             }
         }
