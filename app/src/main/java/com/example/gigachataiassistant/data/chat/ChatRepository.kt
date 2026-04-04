@@ -8,5 +8,7 @@ interface ChatRepository {
 
     fun observeChats(searchQuery: String): Flow<PagingData<ChatEntity>>
 
+    fun observeChat(chatId: String): Flow<ChatEntity?>
+
     suspend fun createChat(title: String): String
 }

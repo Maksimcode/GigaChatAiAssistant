@@ -12,7 +12,11 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.example.gigachataiassistant.data.auth.AuthRepositoryImpl
 import com.example.gigachataiassistant.data.chat.ChatRepositoryImpl
+import com.example.gigachataiassistant.data.chat.MessageRepositoryImpl
+import com.example.gigachataiassistant.data.gigachat.GigaChatNetworkModule
 import com.example.gigachataiassistant.data.local.AppDatabase
+import com.example.gigachataiassistant.ui.chat.ChatViewModel
+import com.example.gigachataiassistant.ui.chat.ChatViewModelFactory
 import com.example.gigachataiassistant.ui.chats.ChatListViewModel
 import com.example.gigachataiassistant.ui.chats.ChatListViewModelFactory
 import com.example.gigachataiassistant.ui.screens.ChatListScreen
@@ -76,8 +80,30 @@ fun AppNavHost(
         }
         composable<ChatDestination> { entry ->
             val route = entry.toRoute<ChatDestination>()
+            val context = LocalContext.current
+            val db = remember {
+                AppDatabase.getInstance(context.applicationContext)
+            }
+            val messageRepository = remember {
+                MessageRepositoryImpl(db.messageDao())
+            }
+            val chatRepository = remember {
+                ChatRepositoryImpl(db.chatDao())
+            }
+            val gigaChat = remember {
+                GigaChatNetworkModule.createRemoteDataSource()
+            }
+            val chatViewModel: ChatViewModel = viewModel(
+                key = route.chatId,
+                factory = ChatViewModelFactory(
+                    chatId = route.chatId,
+                    messageRepository = messageRepository,
+                    chatRepository = chatRepository,
+                    gigaChat = gigaChat,
+                ),
+            )
             ChatScreen(
-                chatId = route.chatId,
+                viewModel = chatViewModel,
                 onBack = { navController.popBackStack() },
             )
         }

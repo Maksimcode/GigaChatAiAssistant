@@ -12,6 +12,9 @@ class ChatRepositoryImpl(
     private val chatDao: ChatDao,
 ) : ChatRepository {
 
+    override fun observeChat(chatId: String): Flow<ChatEntity?> =
+        chatDao.observeChatById(chatId)
+
     override fun observeChats(searchQuery: String): Flow<PagingData<ChatEntity>> {
         val trimmed = searchQuery.trim()
         return Pager(

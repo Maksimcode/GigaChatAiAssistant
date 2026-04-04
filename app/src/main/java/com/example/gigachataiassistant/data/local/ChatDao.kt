@@ -5,12 +5,16 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ChatDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(chat: ChatEntity)
+
+    @Query("SELECT * FROM chats WHERE id = :id LIMIT 1")
+    fun observeChatById(id: String): Flow<ChatEntity?>
 
     @Query("SELECT * FROM chats ORDER BY createdAt DESC")
     fun pagingSourceAll(): PagingSource<Int, ChatEntity>
