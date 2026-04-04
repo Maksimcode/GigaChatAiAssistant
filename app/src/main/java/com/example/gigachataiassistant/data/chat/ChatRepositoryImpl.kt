@@ -12,7 +12,10 @@ class ChatRepositoryImpl(
     private val chatDao: ChatDao,
 ) : ChatRepository {
 
-    override fun observeChats(searchQuery: String): Flow<PagingData<ChatEntity>> {
+    override fun observeChat(chatId: String, userId: String): Flow<ChatEntity?> =
+        chatDao.observeChatById(chatId, userId)
+
+    override fun observeChats(userId: String, searchQuery: String): Flow<PagingData<ChatEntity>> {
         val trimmed = searchQuery.trim()
         return Pager(
             config = PagingConfig(
@@ -22,19 +25,20 @@ class ChatRepositoryImpl(
             ),
             pagingSourceFactory = {
                 if (trimmed.isEmpty()) {
-                    chatDao.pagingSourceAll()
+                    chatDao.pagingSourceAll(userId)
                 } else {
-                    chatDao.pagingSourceByTitle(trimmed)
+                    chatDao.pagingSourceByTitle(userId, trimmed)
                 }
             },
         ).flow
     }
 
-    override suspend fun createChat(title: String): String {
+    override suspend fun createChat(userId: String, title: String): String {
         val id = UUID.randomUUID().toString()
         chatDao.insert(
             ChatEntity(
                 id = id,
+                userId = userId,
                 title = title,
                 createdAt = System.currentTimeMillis(),
             ),

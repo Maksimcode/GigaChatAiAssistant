@@ -6,10 +6,14 @@ import androidx.room.PrimaryKey
 
 @Entity(
     tableName = "chats",
-    indices = [Index(value = ["title"])],
+    indices = [
+        Index(value = ["title"]),
+        Index(value = ["userId"]),
+    ],
 )
 data class ChatEntity(
     @PrimaryKey val id: String,
+    val userId: String,
     val title: String,
     val createdAt: Long,
 )

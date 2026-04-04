@@ -7,13 +7,14 @@ import androidx.room.RoomDatabase
 import kotlin.jvm.Volatile
 
 @Database(
-    entities = [ChatEntity::class],
-    version = 1,
+    entities = [ChatEntity::class, MessageEntity::class],
+    version = 3,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun chatDao(): ChatDao
+    abstract fun messageDao(): MessageDao
 
     companion object {
         @Volatile

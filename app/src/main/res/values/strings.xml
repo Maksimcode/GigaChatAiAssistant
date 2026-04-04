@@ -23,4 +23,10 @@
     <string name="chats_images">Изображения</string>
     <string name="chats_cd_chat_icon">Иконка чата</string>
 
+    <string name="chat_default_title">Чат</string>
+    <string name="chat_message_hint">Сообщение</string>
+    <string name="chat_send">Отправить</string>
+    <string name="chat_share">Поделиться</string>
+    <string name="chat_cd_back">Назад</string>
+
 </resources>

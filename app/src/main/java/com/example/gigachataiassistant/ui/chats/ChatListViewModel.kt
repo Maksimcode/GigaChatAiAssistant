@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class ChatListViewModel(
+    private val userId: String,
     private val repository: ChatRepository,
 ) : ViewModel() {
 
@@ -47,11 +48,11 @@ class ChatListViewModel(
     }
 
     val chats: Flow<PagingData<ChatEntity>> = appliedQueryInternal
-        .flatMapLatest { query -> repository.observeChats(query) }
+        .flatMapLatest { query -> repository.observeChats(userId, query) }
         .cachedIn(viewModelScope)
 
     suspend fun createNewChat(title: String = "Новый чат"): String =
-        repository.createChat(title)
+        repository.createChat(userId, title)
 
     companion object {
         private const val SEARCH_DEBOUNCE_MS = 300L
