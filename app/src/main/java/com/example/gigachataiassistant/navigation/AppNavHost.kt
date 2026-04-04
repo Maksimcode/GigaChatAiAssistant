@@ -3,12 +3,18 @@ package com.example.gigachataiassistant.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.example.gigachataiassistant.data.auth.AuthRepositoryImpl
+import com.example.gigachataiassistant.data.chat.ChatRepositoryImpl
+import com.example.gigachataiassistant.data.local.AppDatabase
+import com.example.gigachataiassistant.ui.chats.ChatListViewModel
+import com.example.gigachataiassistant.ui.chats.ChatListViewModelFactory
 import com.example.gigachataiassistant.ui.screens.ChatListScreen
 import com.example.gigachataiassistant.ui.screens.ChatScreen
 import com.example.gigachataiassistant.ui.screens.ImagesScreen
@@ -52,7 +58,15 @@ fun AppNavHost(
             )
         }
         composable<ChatsDestination> {
+            val context = LocalContext.current
+            val chatRepository = remember {
+                ChatRepositoryImpl(AppDatabase.getInstance(context.applicationContext).chatDao())
+            }
+            val chatListViewModel: ChatListViewModel = viewModel(
+                factory = ChatListViewModelFactory(chatRepository),
+            )
             ChatListScreen(
+                viewModel = chatListViewModel,
                 onOpenChat = { chatId ->
                     navController.navigate(ChatDestination(chatId = chatId))
                 },
