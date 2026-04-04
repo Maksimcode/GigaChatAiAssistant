@@ -19,8 +19,7 @@ import androidx.compose.ui.unit.dp
 fun ChatListScreen(
     onOpenChat: (String) -> Unit,
     onOpenProfile: () -> Unit,
-    onOpenImages: () -> Unit,
-    onOpenLogin: () -> Unit,
+    onOpenImages: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -43,9 +42,6 @@ fun ChatListScreen(
             }
             Button(onClick = onOpenImages) {
                 Text("Изображения")
-            }
-            Button(onClick = onOpenLogin) {
-                Text("Экран входа")
             }
         }
     }
