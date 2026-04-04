@@ -1,6 +1,7 @@
 package com.example.gigachataiassistant.ui.screens
 
 import com.example.gigachataiassistant.R
+import com.example.gigachataiassistant.ui.profile.ProfileViewModel
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,6 +23,7 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
+    viewModel: ProfileViewModel,
     onBack: () -> Unit,
     onLogout: () -> Unit,
 ) {
@@ -47,7 +49,11 @@ fun ProfileScreen(
                 .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Button(onClick = onLogout) {
+            Button(
+                onClick = {
+                    viewModel.signOut(onSuccess = onLogout)
+                }
+            ) {
                 Text(stringResource(R.string.action_logout))
             }
         }

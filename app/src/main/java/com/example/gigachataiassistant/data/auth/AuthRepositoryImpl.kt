@@ -26,6 +26,10 @@ class AuthRepositoryImpl(
         AuthResult.Failure(mapThrowable(e))
     }
 
+    override fun getCurrentUser(): com.google.firebase.auth.FirebaseUser? {
+        return firebaseAuth.currentUser
+    }
+
     override fun signOut() {
         firebaseAuth.signOut()
     }
