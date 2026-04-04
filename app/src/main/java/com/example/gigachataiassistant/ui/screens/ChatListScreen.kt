@@ -10,8 +10,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
@@ -113,8 +113,8 @@ fun ChatListScreen(
                 }
             }
             val refreshState = lazyPagingItems.loadState.refresh
-            when {
-                refreshState is LoadState.Loading && lazyPagingItems.itemCount == 0 -> {
+            when (refreshState) {
+                is LoadState.Loading if lazyPagingItems.itemCount == 0 -> {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -124,7 +124,8 @@ fun ChatListScreen(
                         CircularProgressIndicator()
                     }
                 }
-                refreshState is LoadState.NotLoading && lazyPagingItems.itemCount == 0 -> {
+
+                is LoadState.NotLoading if lazyPagingItems.itemCount == 0 -> {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -138,6 +139,7 @@ fun ChatListScreen(
                         )
                     }
                 }
+
                 else -> {
                     LazyColumn(
                         modifier = Modifier
@@ -189,7 +191,7 @@ private fun ChatListRow(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Icon(
-            imageVector = Icons.Default.Chat,
+            imageVector = Icons.AutoMirrored.Filled.Chat,
             contentDescription = stringResource(R.string.chats_cd_chat_icon),
             tint = MaterialTheme.colorScheme.primary,
         )
