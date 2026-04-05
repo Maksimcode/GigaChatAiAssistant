@@ -11,4 +11,8 @@ interface ChatRepository {
     fun observeChats(userId: String, searchQuery: String): Flow<PagingData<ChatEntity>>
 
     suspend fun createChat(userId: String, title: String): String
+
+    suspend fun getChat(chatId: String, userId: String): ChatEntity?
+
+    suspend fun updateChatTitle(chatId: String, userId: String, title: String)
 }

@@ -1,6 +1,7 @@
 package com.example.gigachataiassistant.ui.screens
 
 import android.content.Intent
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -34,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -99,7 +102,7 @@ fun ChatScreen(
                 }
             }
 
-            uiState.error?.let { err ->
+            uiState.errorMessageId?.let { errId ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -108,7 +111,7 @@ fun ChatScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = err,
+                        text = stringResource(errId),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.weight(1f),
@@ -134,6 +137,19 @@ fun ChatScreen(
                     minLines = 2,
                     maxLines = 6,
                     enabled = !uiState.isSending,
+                    trailingIcon = {
+                        if (input.isNotEmpty()) {
+                            IconButton(
+                                onClick = { input = "" },
+                                enabled = !uiState.isSending,
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = stringResource(R.string.chat_clear_input),
+                                )
+                            }
+                        }
+                    },
                 )
                 if (uiState.isSending) {
                     CircularProgressIndicator(modifier = Modifier.padding(8.dp))
@@ -170,6 +186,17 @@ private fun MessageBubble(
                 Text(
                     text = message.content,
                     style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.then(
+                        if (message.role == MessageRole.ASSISTANT) {
+                            Modifier.pointerInput(message.id) {
+                                detectTapGestures(
+                                    onLongPress = { onShareAssistant(message.content) },
+                                )
+                            }
+                        } else {
+                            Modifier
+                        },
+                    ),
                 )
                 if (message.role == MessageRole.ASSISTANT) {
                     Row(

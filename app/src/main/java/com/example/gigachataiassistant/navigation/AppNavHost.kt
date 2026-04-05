@@ -96,6 +96,7 @@ fun AppNavHost(
             val route = entry.toRoute<ChatDestination>()
             val context = LocalContext.current
             val currentUserId = firebaseAuth.currentUser?.uid ?: ""
+            val defaultNewChatTitle = stringResource(R.string.chats_new_chat)
             val db = remember {
                 AppDatabase.getInstance(context.applicationContext)
             }
@@ -116,6 +117,7 @@ fun AppNavHost(
                     messageRepository = messageRepository,
                     chatRepository = chatRepository,
                     gigaChat = gigaChat,
+                    defaultNewChatTitle = defaultNewChatTitle,
                 ),
             )
             ChatScreen(

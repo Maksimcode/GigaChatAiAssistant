@@ -37,6 +37,10 @@
     <string name="chat_send">Отправить</string>
     <string name="chat_share">Поделиться</string>
     <string name="chat_cd_back">Назад</string>
+    <string name="chat_clear_input">Очистить текст</string>
+    <string name="chat_error_generic">Не удалось выполнить действие. Попробуйте снова</string>
+    <string name="chat_error_gigachat_failed">Не удалось получить ответ</string>
+    <string name="chat_error_retry_empty">Нет сообщений для повтора</string>
 
     <string name="profile_title">Профиль</string>
     <string name="profile_email_label">Email</string>
