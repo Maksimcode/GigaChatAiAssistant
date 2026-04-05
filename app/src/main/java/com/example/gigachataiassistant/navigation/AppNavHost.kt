@@ -81,8 +81,8 @@ fun AppNavHost(
                 onOpenChat = { chatId ->
                     navController.navigate(ChatDestination(chatId = chatId))
                 },
-                onOpenProfile = { navController.navigate(ProfileDestination) },
-                onOpenImages = { navController.navigate(ImagesDestination) },
+                onOpenProfile = { navController.navigateDrawerMenuItem(DrawerMenuItem.Profile) },
+                onOpenImages = { navController.navigateDrawerMenuItem(DrawerMenuItem.Images) },
             )
         }
         composable<ChatDestination> { entry ->
