@@ -22,7 +22,7 @@ data class ChatUiState(
     val messages: List<MessageEntity> = emptyList(),
     val title: String = "",
     val isSending: Boolean = false,
-    @StringRes val errorMessageId: Int? = null,
+    @param:StringRes val errorMessageId: Int? = null,
 )
 
 class ChatViewModel(
@@ -79,7 +79,7 @@ class ChatViewModel(
                             }
                         },
                     )
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     _uiState.update {
                         it.copy(errorMessageId = R.string.chat_error_generic)
                     }
@@ -120,7 +120,7 @@ class ChatViewModel(
                             }
                         },
                     )
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     _uiState.update {
                         it.copy(errorMessageId = R.string.chat_error_generic)
                     }

@@ -12,6 +12,7 @@ import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -140,8 +141,8 @@ fun ChatListScreen(
                     )
                 }
                 val refreshState = lazyPagingItems.loadState.refresh
-                when (refreshState) {
-                    is LoadState.Loading if lazyPagingItems.itemCount == 0 -> {
+                when {
+                    refreshState is LoadState.Loading && lazyPagingItems.itemCount == 0 -> {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -152,7 +153,30 @@ fun ChatListScreen(
                         }
                     }
 
-                    is LoadState.NotLoading if lazyPagingItems.itemCount == 0 -> {
+                    refreshState is LoadState.Error && lazyPagingItems.itemCount == 0 -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .weight(1f)
+                                .padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
+                        ) {
+                            Text(
+                                text = stringResource(R.string.chats_load_error),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                            Button(
+                                onClick = { lazyPagingItems.retry() },
+                                modifier = Modifier.padding(top = 12.dp),
+                            ) {
+                                Text(stringResource(R.string.action_retry))
+                            }
+                        }
+                    }
+
+                    refreshState is LoadState.NotLoading && lazyPagingItems.itemCount == 0 -> {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -195,6 +219,28 @@ fun ChatListScreen(
                                         contentAlignment = Alignment.Center,
                                     ) {
                                         CircularProgressIndicator()
+                                    }
+                                }
+                            }
+                            if (lazyPagingItems.loadState.append is LoadState.Error) {
+                                item {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.chats_append_error),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.error,
+                                        )
+                                        Button(
+                                            onClick = { lazyPagingItems.retry() },
+                                            modifier = Modifier.padding(top = 8.dp),
+                                        ) {
+                                            Text(stringResource(R.string.action_retry))
+                                        }
                                     }
                                 }
                             }

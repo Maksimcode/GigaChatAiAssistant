@@ -15,6 +15,7 @@ class AuthErrorMapper {
         AuthError.WeakPassword -> R.string.auth_error_weak_password
         AuthError.Network -> R.string.auth_error_network
         AuthError.InvalidCredential -> R.string.auth_error_invalid_credentials
+        AuthError.StorageUpload -> R.string.profile_upload_error
         AuthError.Unknown -> R.string.auth_error_generic
     }
 }

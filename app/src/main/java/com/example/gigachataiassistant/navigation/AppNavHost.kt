@@ -43,8 +43,11 @@ fun AppNavHost(
     navController: NavHostController = rememberNavController(),
 ) {
     val context = LocalContext.current
-    val authRepository = remember { AuthRepositoryImpl() }
+    val authRepository = remember(context.applicationContext) {
+        AuthRepositoryImpl(context.applicationContext)
+    }
     val settingsRepository = remember { SettingsRepository(context.applicationContext) }
+    val gigaChat = remember { GigaChatNetworkModule.createRemoteDataSource() }
     val firebaseAuth = FirebaseAuth.getInstance()
     val startDestination =
         if (firebaseAuth.currentUser != null) ChatsDestination else LoginDestination
@@ -106,9 +109,6 @@ fun AppNavHost(
             val chatRepository = remember {
                 ChatRepositoryImpl(db.chatDao())
             }
-            val gigaChat = remember {
-                GigaChatNetworkModule.createRemoteDataSource()
-            }
             val chatViewModel: ChatViewModel = viewModel(
                 key = route.chatId,
                 factory = ChatViewModelFactory(
@@ -134,7 +134,7 @@ fun AppNavHost(
             val newChatTitle = stringResource(R.string.chats_new_chat)
             val db = remember { AppDatabase.getInstance(context.applicationContext) }
             val profileViewModel: ProfileViewModel = viewModel(
-                factory = ProfileViewModelFactory(authRepository, settingsRepository, db)
+                factory = ProfileViewModelFactory(authRepository, settingsRepository, db, gigaChat)
             )
             ProfileScreen(
                 viewModel = profileViewModel,
