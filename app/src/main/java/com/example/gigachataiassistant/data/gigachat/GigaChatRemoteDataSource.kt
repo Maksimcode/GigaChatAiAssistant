@@ -12,6 +12,30 @@ class GigaChatRemoteDataSource(
     private val chatApi: GigaChatChatApi,
 ) {
 
+    suspend fun getBalance(): GigaChatBalanceOutcome = withContext(Dispatchers.IO) {
+        try {
+            val auth = tokenProvider.getAuthorizationBearer()
+            val response = chatApi.getBalance(authorization = auth)
+            val entries = response.balance.map { row ->
+                GigaChatBalanceEntry(usage = row.usage, value = row.value)
+            }
+            GigaChatBalanceOutcome.Success(entries)
+        } catch (e: Exception) {
+            if (e is HttpException) {
+                when (e.code()) {
+                    401 -> {
+                        tokenProvider.invalidate()
+                        GigaChatBalanceOutcome.Failure(e)
+                    }
+                    403 -> GigaChatBalanceOutcome.NotAvailable
+                    else -> GigaChatBalanceOutcome.Failure(e)
+                }
+            } else {
+                GigaChatBalanceOutcome.Failure(e)
+            }
+        }
+    }
+
     suspend fun sendChat(
         messages: List<ChatMessageDto>,
         model: String = GigaChatConstants.DEFAULT_CHAT_MODEL,

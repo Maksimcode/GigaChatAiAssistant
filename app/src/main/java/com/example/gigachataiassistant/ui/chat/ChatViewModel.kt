@@ -1,7 +1,9 @@
 package com.example.gigachataiassistant.ui.chat
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.gigachataiassistant.R
 import com.example.gigachataiassistant.data.chat.ChatRepository
 import com.example.gigachataiassistant.data.chat.MessageRepository
 import com.example.gigachataiassistant.data.gigachat.GigaChatRemoteDataSource
@@ -20,7 +22,7 @@ data class ChatUiState(
     val messages: List<MessageEntity> = emptyList(),
     val title: String = "",
     val isSending: Boolean = false,
-    val error: String? = null,
+    @param:StringRes val errorMessageId: Int? = null,
 )
 
 class ChatViewModel(
@@ -29,6 +31,7 @@ class ChatViewModel(
     private val messageRepository: MessageRepository,
     private val chatRepository: ChatRepository,
     private val gigaChat: GigaChatRemoteDataSource,
+    private val defaultNewChatTitle: String,
 ) : ViewModel() {
 
     private val sendMutex = Mutex()
@@ -55,7 +58,7 @@ class ChatViewModel(
             if (trimmed.isEmpty()) return@launch
             sendMutex.withLock {
                 if (_uiState.value.isSending) return@withLock
-                _uiState.update { it.copy(isSending = true, error = null) }
+                _uiState.update { it.copy(isSending = true, errorMessageId = null) }
                 try {
                     messageRepository.insertMessage(chatId, MessageRole.USER, trimmed)
                     val dtos = messageRepository.getMessages(chatId).map { entity ->
@@ -68,15 +71,18 @@ class ChatViewModel(
                                 MessageRole.ASSISTANT,
                                 assistantText,
                             )
+                            maybeAutoRenameChatIfDefault()
                         },
-                        onFailure = { e ->
+                        onFailure = {
                             _uiState.update {
-                                it.copy(error = e.message ?: "Не удалось получить ответ")
+                                it.copy(errorMessageId = R.string.chat_error_gigachat_failed)
                             }
                         },
                     )
-                } catch (e: Exception) {
-                    _uiState.update { it.copy(error = e.message ?: "Ошибка") }
+                } catch (_: Exception) {
+                    _uiState.update {
+                        it.copy(errorMessageId = R.string.chat_error_generic)
+                    }
                 } finally {
                     _uiState.update { it.copy(isSending = false) }
                 }
@@ -88,13 +94,15 @@ class ChatViewModel(
         viewModelScope.launch {
             sendMutex.withLock {
                 if (_uiState.value.isSending) return@withLock
-                _uiState.update { it.copy(isSending = true, error = null) }
+                _uiState.update { it.copy(isSending = true, errorMessageId = null) }
                 try {
                     val dtos = messageRepository.getMessages(chatId).map { entity ->
                         ChatMessageDto(role = entity.role, content = entity.content)
                     }
                     if (dtos.isEmpty()) {
-                        _uiState.update { it.copy(error = "Нет сообщений для повтора") }
+                        _uiState.update {
+                            it.copy(errorMessageId = R.string.chat_error_retry_empty)
+                        }
                         return@withLock
                     }
                     gigaChat.sendChat(dtos).fold(
@@ -104,15 +112,18 @@ class ChatViewModel(
                                 MessageRole.ASSISTANT,
                                 assistantText,
                             )
+                            maybeAutoRenameChatIfDefault()
                         },
-                        onFailure = { e ->
+                        onFailure = {
                             _uiState.update {
-                                it.copy(error = e.message ?: "Не удалось получить ответ")
+                                it.copy(errorMessageId = R.string.chat_error_gigachat_failed)
                             }
                         },
                     )
-                } catch (e: Exception) {
-                    _uiState.update { it.copy(error = e.message ?: "Ошибка") }
+                } catch (_: Exception) {
+                    _uiState.update {
+                        it.copy(errorMessageId = R.string.chat_error_generic)
+                    }
                 } finally {
                     _uiState.update { it.copy(isSending = false) }
                 }
@@ -120,7 +131,22 @@ class ChatViewModel(
         }
     }
 
-    fun consumeError() {
-        _uiState.update { it.copy(error = null) }
+    private suspend fun maybeAutoRenameChatIfDefault() {
+        val chat = chatRepository.getChat(chatId, userId) ?: return
+        if (chat.title != defaultNewChatTitle) return
+        val messages = messageRepository.getMessages(chatId)
+        val firstUser = messages.firstOrNull { it.role == MessageRole.USER } ?: return
+        val raw = firstUser.content.trim().replace("\n", " ")
+        if (raw.isEmpty()) return
+        val newTitle = if (raw.length <= CHAT_TITLE_MAX_LEN) {
+            raw
+        } else {
+            raw.take(CHAT_TITLE_MAX_LEN - 1) + "…"
+        }
+        chatRepository.updateChatTitle(chatId, userId, newTitle)
+    }
+
+    companion object {
+        private const val CHAT_TITLE_MAX_LEN = 48
     }
 }

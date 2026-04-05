@@ -34,6 +34,14 @@ android {
         buildConfigField("String", "GIGACHAT_AUTH_KEY", "\"${authKey
             .replace("\\", "\\\\")
             .replace("\"", "\\\"")}\"")
+        val firebaseWebClientId = localProperties.getProperty("firebase.web.client.id", "")
+        buildConfigField(
+            "String",
+            "FIREBASE_WEB_CLIENT_ID",
+            "\"${firebaseWebClientId
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")}\"",
+        )
     }
 
     buildTypes {
@@ -65,6 +73,10 @@ dependencies {
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
+    implementation(libs.firebase.storage)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services)
+    implementation(libs.google.identity.googleid)
     implementation(libs.kotlinx.coroutines.play.services)
 
     implementation(libs.retrofit)
@@ -95,6 +107,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material.icons.extended)
+    implementation(libs.coil.compose)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

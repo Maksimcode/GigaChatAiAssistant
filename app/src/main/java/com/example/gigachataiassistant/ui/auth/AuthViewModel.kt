@@ -1,8 +1,10 @@
 package com.example.gigachataiassistant.ui.auth
 
+import android.util.Patterns
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.gigachataiassistant.R
 import com.example.gigachataiassistant.domain.auth.AuthError
 import com.example.gigachataiassistant.domain.auth.AuthRepository
 import com.example.gigachataiassistant.domain.auth.AuthResult
@@ -14,7 +16,7 @@ import kotlinx.coroutines.launch
 
 data class AuthUiState(
     val isLoading: Boolean = false,
-    @StringRes val errorMessageId: Int? = null,
+    @param:StringRes val errorMessageId: Int? = null,
     val navigateToChats: Boolean = false,
 )
 
@@ -37,10 +39,20 @@ class AuthViewModel(
                 }
                 return@launch
             }
+            val trimmed = email.trim()
+            if (!Patterns.EMAIL_ADDRESS.matcher(trimmed).matches()) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessageId = errorMapper.toMessageRes(AuthError.InvalidEmail),
+                    )
+                }
+                return@launch
+            }
 
             _uiState.update { it.copy(isLoading = true, errorMessageId = null) }
 
-            when (val result = repository.signInWithEmail(email.trim(), password)) {
+            when (val result = repository.signInWithEmail(trimmed, password)) {
                 is AuthResult.Success -> {
                     _uiState.update {
                         it.copy(isLoading = false, navigateToChats = true)
@@ -69,10 +81,29 @@ class AuthViewModel(
                 }
                 return@launch
             }
+            val trimmed = email.trim()
+            if (!Patterns.EMAIL_ADDRESS.matcher(trimmed).matches()) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessageId = errorMapper.toMessageRes(AuthError.InvalidEmail),
+                    )
+                }
+                return@launch
+            }
+            if (password.length < 6) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessageId = errorMapper.toMessageRes(AuthError.WeakPassword),
+                    )
+                }
+                return@launch
+            }
 
             _uiState.update { it.copy(isLoading = true, errorMessageId = null) }
 
-            when (val result = repository.signUpWithEmail(email.trim(), password)) {
+            when (val result = repository.signUpWithEmail(trimmed, password)) {
                 is AuthResult.Success -> {
                     _uiState.update {
                         it.copy(isLoading = false, navigateToChats = true)
@@ -87,6 +118,33 @@ class AuthViewModel(
                     }
                 }
             }
+        }
+    }
+
+    fun signInWithGoogle(idToken: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessageId = null) }
+            when (val result = repository.signInWithGoogle(idToken)) {
+                is AuthResult.Success -> {
+                    _uiState.update {
+                        it.copy(isLoading = false, navigateToChats = true)
+                    }
+                }
+                is AuthResult.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessageId = errorMapper.toMessageRes(result.error),
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun onGoogleSignInLauncherError() {
+        _uiState.update {
+            it.copy(isLoading = false, errorMessageId = R.string.auth_error_google)
         }
     }
 

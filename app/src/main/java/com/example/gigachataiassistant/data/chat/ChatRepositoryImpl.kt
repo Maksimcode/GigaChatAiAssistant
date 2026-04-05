@@ -46,6 +46,13 @@ class ChatRepositoryImpl(
         return id
     }
 
+    override suspend fun getChat(chatId: String, userId: String): ChatEntity? =
+        chatDao.getChatById(chatId, userId)
+
+    override suspend fun updateChatTitle(chatId: String, userId: String, title: String) {
+        chatDao.updateTitle(chatId, userId, title)
+    }
+
     companion object {
         private const val PAGE_SIZE = 20
     }

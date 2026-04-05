@@ -12,6 +12,7 @@ class ChatViewModelFactory(
     private val messageRepository: MessageRepository,
     private val chatRepository: ChatRepository,
     private val gigaChat: GigaChatRemoteDataSource,
+    private val defaultNewChatTitle: String,
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
@@ -23,6 +24,7 @@ class ChatViewModelFactory(
                 messageRepository = messageRepository,
                 chatRepository = chatRepository,
                 gigaChat = gigaChat,
+                defaultNewChatTitle = defaultNewChatTitle,
             ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class: $modelClass")

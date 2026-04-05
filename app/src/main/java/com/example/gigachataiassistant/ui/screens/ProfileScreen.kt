@@ -1,6 +1,12 @@
 package com.example.gigachataiassistant.ui.screens
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -44,16 +51,24 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import coil.compose.SubcomposeAsyncImage
+import coil.compose.SubcomposeAsyncImageContent
 import com.example.gigachataiassistant.R
 import com.example.gigachataiassistant.data.settings.AppTheme
 import com.example.gigachataiassistant.navigation.DrawerMenuItem
 import com.example.gigachataiassistant.ui.navigation.MainModalNavigationDrawer
+import com.example.gigachataiassistant.ui.profile.ProfileGigaChatQuotaState
 import com.example.gigachataiassistant.ui.profile.ProfileViewModel
 import kotlinx.coroutines.launch
+import java.text.NumberFormat
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,6 +83,14 @@ fun ProfileScreen(
     var editedName by remember(uiState.user) { mutableStateOf(uiState.user?.displayName ?: "") }
     val scope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val user = uiState.user
+    val phone = user?.phoneNumber?.takeIf { it.isNotBlank() }
+
+    val pickPhotoLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+    ) { uri ->
+        uri?.let { viewModel.uploadProfilePhoto(it) }
+    }
 
     MainModalNavigationDrawer(
         drawerState = drawerState,
@@ -99,13 +122,16 @@ fun ProfileScreen(
                             )
                         }
                         if (!uiState.isEditing) {
-                            TextButton(onClick = { viewModel.toggleEditing() }) {
+                            TextButton(
+                                onClick = { viewModel.toggleEditing() },
+                                enabled = !uiState.isPhotoUploading,
+                            ) {
                                 Text(stringResource(R.string.profile_edit_action))
                             }
                         } else {
                             TextButton(
                                 onClick = { viewModel.updateProfile(editedName) },
-                                enabled = !uiState.isLoading,
+                                enabled = !uiState.isLoading && !uiState.isPhotoUploading,
                             ) {
                                 Text(stringResource(R.string.profile_save_action))
                             }
@@ -125,15 +151,18 @@ fun ProfileScreen(
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.AccountCircle,
-                        contentDescription = stringResource(R.string.profile_cd_avatar),
-                        modifier = Modifier.size(100.dp),
-                        tint = MaterialTheme.colorScheme.primary,
+                    ProfileAvatarPhoto(
+                        photoUrl = user?.photoUrl?.toString(),
+                        isUploading = uiState.isPhotoUploading,
+                        enabled = !uiState.isLoading && !uiState.isPhotoUploading,
+                        onClick = {
+                            pickPhotoLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                            )
+                        },
                     )
-
                     if (uiState.isEditing) {
                         OutlinedTextField(
                             value = editedName,
@@ -141,27 +170,42 @@ fun ProfileScreen(
                             label = { Text(stringResource(R.string.profile_name_label)) },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                        )
-                    } else {
-                        Text(
-                            text = uiState.user?.displayName?.ifBlank { "—" } ?: "—",
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
+                            enabled = !uiState.isLoading && !uiState.isPhotoUploading,
                         )
                     }
+                }
 
-                    Text(
-                        text = uiState.user?.email ?: "...",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    if (!uiState.isEditing) {
+                        ProfileLabeledValue(
+                            label = stringResource(R.string.profile_name_label),
+                            value = user?.displayName?.ifBlank { "—" } ?: "—",
+                        )
+                    }
+                    ProfileLabeledValue(
+                        label = stringResource(R.string.profile_email_label),
+                        value = user?.email ?: "—",
+                    )
+                    phone?.let {
+                        ProfileLabeledValue(
+                            label = stringResource(R.string.profile_phone_label),
+                            value = it,
+                        )
+                    }
+                    ProfileGigaChatQuotaSection(
+                        state = uiState.gigaChatQuota,
+                        onRetry = { viewModel.refreshGigaChatQuota() },
                     )
                 }
 
                 HorizontalDivider()
 
-                uiState.error?.let {
+                uiState.errorMessageId?.let { errId ->
                     Text(
-                        text = it,
+                        text = stringResource(errId),
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.fillMaxWidth(),
@@ -201,7 +245,7 @@ fun ProfileScreen(
                             containerColor = MaterialTheme.colorScheme.errorContainer,
                             contentColor = MaterialTheme.colorScheme.onErrorContainer,
                         ),
-                        enabled = !uiState.isLoading,
+                        enabled = !uiState.isLoading && !uiState.isPhotoUploading,
                         shape = MaterialTheme.shapes.medium,
                     ) {
                         if (uiState.isLoading) {
@@ -218,13 +262,174 @@ fun ProfileScreen(
                     OutlinedButton(
                         onClick = { viewModel.toggleEditing() },
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = !uiState.isLoading,
+                        enabled = !uiState.isLoading && !uiState.isPhotoUploading,
                     ) {
                         Text(stringResource(R.string.profile_cancel_action))
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ProfileAvatarPhoto(
+    photoUrl: String?,
+    isUploading: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    val url = photoUrl?.takeIf { it.isNotBlank() }
+    Box(
+        modifier = Modifier
+            .size(100.dp)
+            .clip(CircleShape)
+            .clickable(enabled = enabled, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (url != null) {
+            SubcomposeAsyncImage(
+                model = url,
+                contentDescription = stringResource(R.string.profile_cd_avatar),
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                loading = {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(modifier = Modifier.size(32.dp))
+                    }
+                },
+                error = {
+                    Icon(
+                        imageVector = Icons.Default.AccountCircle,
+                        contentDescription = stringResource(R.string.profile_cd_avatar),
+                        modifier = Modifier.fillMaxSize(),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                },
+                success = { SubcomposeAsyncImageContent() },
+            )
+        } else {
+            Icon(
+                imageVector = Icons.Default.AccountCircle,
+                contentDescription = stringResource(R.string.profile_cd_avatar),
+                modifier = Modifier.fillMaxSize(),
+                tint = MaterialTheme.colorScheme.primary,
+            )
+        }
+        if (isUploading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(40.dp),
+                    strokeWidth = 3.dp,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProfileGigaChatQuotaSection(
+    state: ProfileGigaChatQuotaState,
+    onRetry: () -> Unit,
+) {
+    val numberFormat = remember {
+        NumberFormat.getNumberInstance(Locale.forLanguageTag("ru-RU")).apply {
+            maximumFractionDigits = 6
+            minimumFractionDigits = 0
+        }
+    }
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(R.string.profile_tokens_label),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        when (state) {
+            ProfileGigaChatQuotaState.Loading -> {
+                Row(
+                    modifier = Modifier.padding(top = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp,
+                    )
+                    Text(
+                        text = stringResource(R.string.profile_tokens_loading),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            }
+            is ProfileGigaChatQuotaState.Loaded -> {
+                if (state.entries.isEmpty()) {
+                    Text(
+                        text = stringResource(R.string.profile_tokens_empty),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
+                } else {
+                    Column(
+                        modifier = Modifier.padding(top = 4.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        state.entries.forEach { entry ->
+                            Text(
+                                text = "${entry.usage}: ${numberFormat.format(entry.value)}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
+                    }
+                }
+            }
+            ProfileGigaChatQuotaState.NotAvailable -> {
+                Text(
+                    text = stringResource(R.string.profile_tokens_pay_as_you_go),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+            }
+            is ProfileGigaChatQuotaState.Error -> {
+                Column(modifier = Modifier.padding(top = 4.dp)) {
+                    Text(
+                        text = stringResource(state.messageId),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                    TextButton(onClick = onRetry) {
+                        Text(stringResource(R.string.action_retry))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProfileLabeledValue(
+    label: String,
+    value: String,
+    valueStyle: TextStyle = MaterialTheme.typography.bodyLarge,
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = value,
+            style = valueStyle,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.padding(top = 4.dp),
+        )
     }
 }
 

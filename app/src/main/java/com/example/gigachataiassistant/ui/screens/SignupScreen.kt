@@ -11,6 +11,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,16 +33,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.gigachataiassistant.BuildConfig
 import com.example.gigachataiassistant.R
 import com.example.gigachataiassistant.data.auth.AuthRepositoryImpl
 import com.example.gigachataiassistant.ui.auth.AuthErrorMapper
 import com.example.gigachataiassistant.ui.auth.AuthViewModel
 import com.example.gigachataiassistant.ui.auth.AuthViewModelFactory
+import com.example.gigachataiassistant.ui.auth.rememberGoogleSignInLauncher
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,11 +54,18 @@ fun SignupScreen(
     onNavigateToChats: () -> Unit,
     ) {
 
+    val appContext = LocalContext.current.applicationContext
     val viewModel: AuthViewModel = viewModel(
         factory = AuthViewModelFactory(
-            AuthRepositoryImpl(),
+            AuthRepositoryImpl(appContext),
             AuthErrorMapper(),
         ),
+    )
+
+    val launchGoogleSignIn = rememberGoogleSignInLauncher(
+        onSuccess = { viewModel.signInWithGoogle(it) },
+        onDismissed = { },
+        onError = { viewModel.onGoogleSignInLauncherError() },
     )
 
     val uiState by viewModel.uiState.collectAsState()
@@ -78,7 +90,7 @@ fun SignupScreen(
             snackbarHostState.showSnackbar(msg)
         }
         when (result) {
-            SnackbarResult.ActionPerformed -> viewModel.signIn(email, password)
+            SnackbarResult.ActionPerformed -> viewModel.signUp(email, password)
             else -> viewModel.clearError()
         }
     }
@@ -93,12 +105,12 @@ fun SignupScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Регистрация") },
+                title = { Text(stringResource(R.string.auth_signup_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBackToLogin) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Назад",
+                            contentDescription = stringResource(R.string.chat_cd_back),
                         )
                     }
                 },
@@ -118,7 +130,7 @@ fun SignupScreen(
                 value = email,
                 onValueChange = { email = it },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Email") },
+                label = { Text(stringResource(R.string.auth_email_label)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 enabled = !uiState.isLoading,
@@ -129,7 +141,7 @@ fun SignupScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 8.dp),
-                label = { Text("Пароль") },
+                label = { Text(stringResource(R.string.auth_password_label)) },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -148,11 +160,21 @@ fun SignupScreen(
                         strokeWidth = 2.dp,
                     )
                 } else {
-                    Text("Зарегистрироваться")
+                    Text(stringResource(R.string.auth_signup_submit))
+                }
+            }
+            if (BuildConfig.FIREBASE_WEB_CLIENT_ID.isNotBlank()) {
+                HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+                OutlinedButton(
+                    onClick = launchGoogleSignIn,
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !uiState.isLoading,
+                ) {
+                    Text(stringResource(R.string.auth_sign_up_google))
                 }
             }
             TextButton(onClick = onBackToLogin, enabled = !uiState.isLoading) {
-                Text("Уже есть аккаунт")
+                Text(stringResource(R.string.auth_signup_have_account))
             }
         }
     }

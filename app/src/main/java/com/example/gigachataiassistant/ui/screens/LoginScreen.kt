@@ -6,9 +6,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -32,11 +35,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.gigachataiassistant.BuildConfig
 import com.example.gigachataiassistant.R
 import com.example.gigachataiassistant.data.auth.AuthRepositoryImpl
 import com.example.gigachataiassistant.ui.auth.AuthErrorMapper
 import com.example.gigachataiassistant.ui.auth.AuthViewModel
 import com.example.gigachataiassistant.ui.auth.AuthViewModelFactory
+import com.example.gigachataiassistant.ui.auth.rememberGoogleSignInLauncher
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,11 +49,18 @@ fun LoginScreen(
     onNavigateToChats: () -> Unit,
     onNavigateToSignup: () -> Unit,
 ) {
+    val appContext = LocalContext.current.applicationContext
     val viewModel: AuthViewModel = viewModel(
         factory = AuthViewModelFactory(
-            AuthRepositoryImpl(),
+            AuthRepositoryImpl(appContext),
             AuthErrorMapper(),
         ),
+    )
+
+    val launchGoogleSignIn = rememberGoogleSignInLauncher(
+        onSuccess = { viewModel.signInWithGoogle(it) },
+        onDismissed = { },
+        onError = { viewModel.onGoogleSignInLauncherError() },
     )
 
     val uiState by viewModel.uiState.collectAsState()
@@ -78,7 +90,6 @@ fun LoginScreen(
         }
     }
 
-
     LaunchedEffect(uiState.navigateToChats) {
         if (uiState.navigateToChats) {
             onNavigateToChats()
@@ -87,7 +98,19 @@ fun LoginScreen(
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Вход") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.auth_login_title)) },
+                actions = {
+                    TextButton(
+                        onClick = onNavigateToSignup,
+                        enabled = !uiState.isLoading,
+                    ) {
+                        Text(stringResource(R.string.auth_register))
+                    }
+                },
+            )
+        },
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
         Column(
@@ -102,7 +125,7 @@ fun LoginScreen(
                 value = email,
                 onValueChange = { email = it },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Email") },
+                label = { Text(stringResource(R.string.auth_email_label)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 enabled = !uiState.isLoading,
@@ -113,7 +136,7 @@ fun LoginScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 8.dp),
-                label = { Text("Пароль") },
+                label = { Text(stringResource(R.string.auth_password_label)) },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -132,11 +155,18 @@ fun LoginScreen(
                         strokeWidth = 2.dp,
                     )
                 } else {
-                    Text("Войти")
+                    Text(stringResource(R.string.auth_sign_in))
                 }
             }
-            TextButton(onClick = onNavigateToSignup, enabled = !uiState.isLoading) {
-                Text("Регистрация")
+            if (BuildConfig.FIREBASE_WEB_CLIENT_ID.isNotBlank()) {
+                HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+                OutlinedButton(
+                    onClick = launchGoogleSignIn,
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !uiState.isLoading,
+                ) {
+                    Text(stringResource(R.string.auth_sign_in_google))
+                }
             }
         }
     }
