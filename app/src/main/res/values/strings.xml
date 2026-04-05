@@ -29,4 +29,18 @@
     <string name="chat_share">Поделиться</string>
     <string name="chat_cd_back">Назад</string>
 
+    <string name="profile_title">Профиль</string>
+    <string name="profile_email_label">Email</string>
+    <string name="profile_theme_label">Тема приложения</string>
+    <string name="profile_theme_light">Светлая</string>
+    <string name="profile_theme_dark">Темная</string>
+    <string name="profile_theme_system">Системная</string>
+    <string name="profile_cd_avatar">Аватар пользователя</string>
+    <string name="profile_name_label">Имя</string>
+    <string name="profile_edit_action">Изменить профиль</string>
+    <string name="profile_save_action">Сохранить</string>
+    <string name="profile_cancel_action">Отмена</string>
+    <string name="profile_upload_error">Ошибка загрузки фото</string>
+    <string name="profile_update_success">Профиль обновлен</string>
+
 </resources>

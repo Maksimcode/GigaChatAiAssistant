@@ -26,6 +26,22 @@ class AuthRepositoryImpl(
         AuthResult.Failure(mapThrowable(e))
     }
 
+    override fun getCurrentUser(): com.google.firebase.auth.FirebaseUser? {
+        return firebaseAuth.currentUser
+    }
+
+    override suspend fun updateProfile(displayName: String): AuthResult = try {
+        val user = firebaseAuth.currentUser ?: throw IllegalStateException("User not logged in")
+        val request = com.google.firebase.auth.UserProfileChangeRequest.Builder()
+            .setDisplayName(displayName)
+            .build()
+        user.updateProfile(request).await()
+        user.reload().await()
+        AuthResult.Success
+    } catch (e: Throwable) {
+        AuthResult.Failure(mapThrowable(e))
+    }
+
     override fun signOut() {
         firebaseAuth.signOut()
     }

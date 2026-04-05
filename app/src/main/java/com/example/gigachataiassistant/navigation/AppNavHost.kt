@@ -15,10 +15,13 @@ import com.example.gigachataiassistant.data.chat.ChatRepositoryImpl
 import com.example.gigachataiassistant.data.chat.MessageRepositoryImpl
 import com.example.gigachataiassistant.data.gigachat.GigaChatNetworkModule
 import com.example.gigachataiassistant.data.local.AppDatabase
+import com.example.gigachataiassistant.data.settings.SettingsRepository
 import com.example.gigachataiassistant.ui.chat.ChatViewModel
 import com.example.gigachataiassistant.ui.chat.ChatViewModelFactory
 import com.example.gigachataiassistant.ui.chats.ChatListViewModel
 import com.example.gigachataiassistant.ui.chats.ChatListViewModelFactory
+import com.example.gigachataiassistant.ui.profile.ProfileViewModel
+import com.example.gigachataiassistant.ui.profile.ProfileViewModelFactory
 import com.example.gigachataiassistant.ui.screens.ChatListScreen
 import com.example.gigachataiassistant.ui.screens.ChatScreen
 import com.example.gigachataiassistant.ui.screens.ImagesScreen
@@ -32,7 +35,9 @@ fun AppNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
 ) {
+    val context = LocalContext.current
     val authRepository = remember { AuthRepositoryImpl() }
+    val settingsRepository = remember { SettingsRepository(context.applicationContext) }
     val firebaseAuth = FirebaseAuth.getInstance()
     val startDestination =
         if (firebaseAuth.currentUser != null) ChatsDestination else LoginDestination
@@ -112,10 +117,14 @@ fun AppNavHost(
             )
         }
         composable<ProfileDestination> {
+            val db = remember { AppDatabase.getInstance(context.applicationContext) }
+            val profileViewModel: ProfileViewModel = viewModel(
+                factory = ProfileViewModelFactory(authRepository, settingsRepository, db)
+            )
             ProfileScreen(
+                viewModel = profileViewModel,
                 onBack = { navController.popBackStack() },
                 onLogout = {
-                    authRepository.signOut()
                     navController.navigate(LoginDestination) {
                         popUpTo(navController.graph.id) { inclusive = true }
                     }
