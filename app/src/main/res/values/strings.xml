@@ -9,7 +9,16 @@
     <string name="auth_error_weak_password">Слишком слабый пароль</string>
     <string name="auth_error_network">Нет сети. Проверьте подключение</string>
     <string name="auth_error_invalid_credentials">Неверный email или пароль</string>
-    <string name="auth_error_empty_fields">Заполните email и пароль</string>
+    <string name="auth_error_empty_fields">Заполните E-mail и пароль</string>
+
+    <string name="auth_login_title">Вход в аккаунт</string>
+    <string name="auth_email_label">E-mail</string>
+    <string name="auth_password_label">Пароль</string>
+    <string name="auth_sign_in">Войти</string>
+    <string name="auth_register">Регистрация</string>
+    <string name="auth_signup_title">Регистрация</string>
+    <string name="auth_signup_submit">Зарегистрироваться</string>
+    <string name="auth_signup_have_account">Уже есть аккаунт</string>
 
     <string name="action_logout">Выйти</string>
     <string name="action_retry">Повторить</string>

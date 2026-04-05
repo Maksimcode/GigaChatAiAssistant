@@ -1,5 +1,6 @@
 package com.example.gigachataiassistant.ui.auth
 
+import android.util.Patterns
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -37,10 +38,20 @@ class AuthViewModel(
                 }
                 return@launch
             }
+            val trimmed = email.trim()
+            if (!Patterns.EMAIL_ADDRESS.matcher(trimmed).matches()) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessageId = errorMapper.toMessageRes(AuthError.InvalidEmail),
+                    )
+                }
+                return@launch
+            }
 
             _uiState.update { it.copy(isLoading = true, errorMessageId = null) }
 
-            when (val result = repository.signInWithEmail(email.trim(), password)) {
+            when (val result = repository.signInWithEmail(trimmed, password)) {
                 is AuthResult.Success -> {
                     _uiState.update {
                         it.copy(isLoading = false, navigateToChats = true)
@@ -69,10 +80,29 @@ class AuthViewModel(
                 }
                 return@launch
             }
+            val trimmed = email.trim()
+            if (!Patterns.EMAIL_ADDRESS.matcher(trimmed).matches()) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessageId = errorMapper.toMessageRes(AuthError.InvalidEmail),
+                    )
+                }
+                return@launch
+            }
+            if (password.length < 6) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessageId = errorMapper.toMessageRes(AuthError.WeakPassword),
+                    )
+                }
+                return@launch
+            }
 
             _uiState.update { it.copy(isLoading = true, errorMessageId = null) }
 
-            when (val result = repository.signUpWithEmail(email.trim(), password)) {
+            when (val result = repository.signUpWithEmail(trimmed, password)) {
                 is AuthResult.Success -> {
                     _uiState.update {
                         it.copy(isLoading = false, navigateToChats = true)

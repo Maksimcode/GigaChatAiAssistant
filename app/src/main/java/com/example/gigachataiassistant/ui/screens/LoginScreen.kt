@@ -78,7 +78,6 @@ fun LoginScreen(
         }
     }
 
-
     LaunchedEffect(uiState.navigateToChats) {
         if (uiState.navigateToChats) {
             onNavigateToChats()
@@ -87,7 +86,19 @@ fun LoginScreen(
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Вход") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.auth_login_title)) },
+                actions = {
+                    TextButton(
+                        onClick = onNavigateToSignup,
+                        enabled = !uiState.isLoading,
+                    ) {
+                        Text(stringResource(R.string.auth_register))
+                    }
+                },
+            )
+        },
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
         Column(
@@ -102,7 +113,7 @@ fun LoginScreen(
                 value = email,
                 onValueChange = { email = it },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Email") },
+                label = { Text(stringResource(R.string.auth_email_label)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 enabled = !uiState.isLoading,
@@ -113,7 +124,7 @@ fun LoginScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 8.dp),
-                label = { Text("Пароль") },
+                label = { Text(stringResource(R.string.auth_password_label)) },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -132,11 +143,8 @@ fun LoginScreen(
                         strokeWidth = 2.dp,
                     )
                 } else {
-                    Text("Войти")
+                    Text(stringResource(R.string.auth_sign_in))
                 }
-            }
-            TextButton(onClick = onNavigateToSignup, enabled = !uiState.isLoading) {
-                Text("Регистрация")
             }
         }
     }

@@ -78,7 +78,7 @@ fun SignupScreen(
             snackbarHostState.showSnackbar(msg)
         }
         when (result) {
-            SnackbarResult.ActionPerformed -> viewModel.signIn(email, password)
+            SnackbarResult.ActionPerformed -> viewModel.signUp(email, password)
             else -> viewModel.clearError()
         }
     }
@@ -93,12 +93,12 @@ fun SignupScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Регистрация") },
+                title = { Text(stringResource(R.string.auth_signup_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBackToLogin) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Назад",
+                            contentDescription = stringResource(R.string.chat_cd_back),
                         )
                     }
                 },
@@ -118,7 +118,7 @@ fun SignupScreen(
                 value = email,
                 onValueChange = { email = it },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Email") },
+                label = { Text(stringResource(R.string.auth_email_label)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 enabled = !uiState.isLoading,
@@ -129,7 +129,7 @@ fun SignupScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 8.dp),
-                label = { Text("Пароль") },
+                label = { Text(stringResource(R.string.auth_password_label)) },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -148,11 +148,11 @@ fun SignupScreen(
                         strokeWidth = 2.dp,
                     )
                 } else {
-                    Text("Зарегистрироваться")
+                    Text(stringResource(R.string.auth_signup_submit))
                 }
             }
             TextButton(onClick = onBackToLogin, enabled = !uiState.isLoading) {
-                Text("Уже есть аккаунт")
+                Text(stringResource(R.string.auth_signup_have_account))
             }
         }
     }
