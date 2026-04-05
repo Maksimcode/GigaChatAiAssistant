@@ -4,34 +4,34 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.unit.dp
 import com.example.gigachataiassistant.R
 import com.example.gigachataiassistant.navigation.DrawerMenuItem
+import com.example.gigachataiassistant.ui.components.ChatListSearchField
+import com.example.gigachataiassistant.ui.theme.AuthScreenHorizontalPadding
+import com.example.gigachataiassistant.ui.theme.NavDrawerHeaderHorizontalPadding
+import com.example.gigachataiassistant.ui.theme.NavDrawerHeaderVerticalPadding
+import com.example.gigachataiassistant.ui.theme.NavDrawerItemHorizontalPadding
+import com.example.gigachataiassistant.ui.theme.NavDrawerSearchFieldBottomSpacing
+import com.example.gigachataiassistant.ui.theme.NavDrawerTopSpacerHeight
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,50 +53,30 @@ fun MainModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet {
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(NavDrawerTopSpacerHeight))
                 Text(
                     text = stringResource(R.string.nav_drawer_header),
                     style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(horizontal = 28.dp, vertical = 16.dp),
+                    modifier = Modifier.padding(
+                        horizontal = NavDrawerHeaderHorizontalPadding,
+                        vertical = NavDrawerHeaderVerticalPadding,
+                    ),
                 )
                 if (showSearchField) {
-                    val searchLabel = stringResource(R.string.chats_search_label)
-                    OutlinedTextField(
+                    ChatListSearchField(
                         value = searchQuery,
                         onValueChange = onSearchQueryChange,
+                        onSearchClick = {
+                            onSearchSubmit()
+                            focusManager.clearFocus()
+                        },
+                        placeholder = stringResource(R.string.chats_search_label),
+                        searchIconContentDescription = stringResource(R.string.chats_search_action),
                         modifier = Modifier
-                            .padding(horizontal = 16.dp)
+                            .padding(horizontal = AuthScreenHorizontalPadding)
                             .fillMaxWidth(),
-                        label = { Text(searchLabel) },
-                        singleLine = true,
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = searchLabel,
-                            )
-                        },
-                        trailingIcon = {
-                            IconButton(
-                                onClick = {
-                                    onSearchSubmit()
-                                    focusManager.clearFocus()
-                                },
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Search,
-                                    contentDescription = stringResource(R.string.chats_search_action),
-                                )
-                            }
-                        },
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                        keyboardActions = KeyboardActions(
-                            onSearch = {
-                                onSearchSubmit()
-                                focusManager.clearFocus()
-                            },
-                        ),
                     )
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(NavDrawerSearchFieldBottomSpacing))
                 }
                 DrawerNavRow(
                     titleRes = R.string.nav_drawer_new_chat,
@@ -145,7 +125,7 @@ private fun DrawerNavRow(
         label = { Text(stringResource(titleRes)) },
         selected = selected,
         onClick = onClick,
-        modifier = Modifier.padding(horizontal = 12.dp),
+        modifier = Modifier.padding(horizontal = NavDrawerItemHorizontalPadding),
         colors = NavigationDrawerItemDefaults.colors(
             selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
             selectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer,

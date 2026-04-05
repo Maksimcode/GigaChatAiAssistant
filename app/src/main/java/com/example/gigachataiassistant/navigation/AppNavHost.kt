@@ -104,7 +104,7 @@ fun AppNavHost(
                 AppDatabase.getInstance(context.applicationContext)
             }
             val messageRepository = remember {
-                MessageRepositoryImpl(db.messageDao())
+                MessageRepositoryImpl(db.messageDao(), db.chatDao())
             }
             val chatRepository = remember {
                 ChatRepositoryImpl(db.chatDao())
@@ -149,7 +149,6 @@ fun AppNavHost(
                         item = item,
                     )
                 },
-                onBack = { navController.popBackStackIfPossible() },
                 onLogout = {
                     navController.navigate(LoginDestination) {
                         popUpTo(navController.graph.id) { inclusive = true }

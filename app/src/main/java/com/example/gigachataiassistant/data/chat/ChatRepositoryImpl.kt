@@ -35,12 +35,14 @@ class ChatRepositoryImpl(
 
     override suspend fun createChat(userId: String, title: String): String {
         val id = UUID.randomUUID().toString()
+        val now = System.currentTimeMillis()
         chatDao.insert(
             ChatEntity(
                 id = id,
                 userId = userId,
                 title = title,
-                createdAt = System.currentTimeMillis(),
+                createdAt = now,
+                lastActivityAt = now,
             ),
         )
         return id
@@ -51,6 +53,14 @@ class ChatRepositoryImpl(
 
     override suspend fun updateChatTitle(chatId: String, userId: String, title: String) {
         chatDao.updateTitle(chatId, userId, title)
+    }
+
+    override suspend fun deleteAllChatsForUser(userId: String) {
+        chatDao.deleteAllForUser(userId)
+    }
+
+    override suspend fun deleteChat(chatId: String, userId: String) {
+        chatDao.deleteById(chatId, userId)
     }
 
     companion object {

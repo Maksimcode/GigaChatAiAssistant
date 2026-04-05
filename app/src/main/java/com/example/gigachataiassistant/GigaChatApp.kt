@@ -1,6 +1,7 @@
 package com.example.gigachataiassistant
 
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
@@ -28,7 +29,10 @@ fun GigaChatApp() {
     }
 
     GigaChatAiAssistantTheme(darkTheme = isDarkTheme) {
-        Surface(modifier = Modifier.fillMaxSize()) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background,
+        ) {
             AppNavHost()
         }
     }
