@@ -43,10 +43,14 @@
     <string name="profile_upload_error">Ошибка загрузки фото</string>
     <string name="profile_update_success">Профиль обновлен</string>
 
-    <string name="nav_drawer_search">Поиск по чатам</string>
+    <string name="nav_drawer_header">Меню</string>
+    <string name="nav_drawer_open_menu">Открыть меню навигации</string>
     <string name="nav_drawer_new_chat">Новый чат</string>
     <string name="nav_drawer_images">Изображения</string>
     <string name="nav_drawer_home">Главная</string>
     <string name="nav_drawer_profile">Профиль</string>
+
+    <string name="images_title">Изображения</string>
+    <string name="images_placeholder">Генерация изображений появится здесь</string>
 
 </resources>
