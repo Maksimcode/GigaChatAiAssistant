@@ -2,15 +2,18 @@ package com.example.gigachataiassistant.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.example.gigachataiassistant.data.auth.AuthRepositoryImpl
+import com.example.gigachataiassistant.data.chat.ChatRepository
 import com.example.gigachataiassistant.data.chat.ChatRepositoryImpl
 import com.example.gigachataiassistant.data.chat.MessageRepositoryImpl
 import com.example.gigachataiassistant.data.gigachat.GigaChatNetworkModule
@@ -28,7 +31,11 @@ import com.example.gigachataiassistant.ui.screens.ImagesScreen
 import com.example.gigachataiassistant.ui.screens.LoginScreen
 import com.example.gigachataiassistant.ui.screens.ProfileScreen
 import com.example.gigachataiassistant.ui.screens.SignupScreen
+import com.example.gigachataiassistant.R
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun AppNavHost(
@@ -59,7 +66,7 @@ fun AppNavHost(
         }
         composable<SignupDestination> {
             SignupScreen(
-                onBackToLogin = { navController.popBackStack() },
+                onBackToLogin = { navController.popBackStackIfPossible() },
                 onNavigateToChats = {
                     navController.navigate(ChatsDestination) {
                         popUpTo<LoginDestination> { inclusive = true }
@@ -81,8 +88,8 @@ fun AppNavHost(
                 onOpenChat = { chatId ->
                     navController.navigate(ChatDestination(chatId = chatId))
                 },
-                onOpenProfile = { navController.navigate(ProfileDestination) },
-                onOpenImages = { navController.navigate(ImagesDestination) },
+                selectedDrawerItem = DrawerMenuItem.ChatList,
+                onDrawerNavigate = { navController.navigateDrawerItem(it) },
             )
         }
         composable<ChatDestination> { entry ->
@@ -113,17 +120,34 @@ fun AppNavHost(
             )
             ChatScreen(
                 viewModel = chatViewModel,
-                onBack = { navController.popBackStack() },
+                onBack = { navController.popBackStackIfPossible() },
             )
         }
         composable<ProfileDestination> {
+            val scope = rememberCoroutineScope()
+            val currentUserId = firebaseAuth.currentUser?.uid ?: ""
+            val chatRepository = remember {
+                ChatRepositoryImpl(AppDatabase.getInstance(context.applicationContext).chatDao())
+            }
+            val newChatTitle = stringResource(R.string.chats_new_chat)
             val db = remember { AppDatabase.getInstance(context.applicationContext) }
             val profileViewModel: ProfileViewModel = viewModel(
                 factory = ProfileViewModelFactory(authRepository, settingsRepository, db)
             )
             ProfileScreen(
                 viewModel = profileViewModel,
-                onBack = { navController.popBackStack() },
+                selectedDrawerItem = DrawerMenuItem.Profile,
+                onDrawerNavigate = { item ->
+                    handleDrawerNavigation(
+                        navController = navController,
+                        scope = scope,
+                        chatRepository = chatRepository,
+                        userId = currentUserId,
+                        newChatTitle = newChatTitle,
+                        item = item,
+                    )
+                },
+                onBack = { navController.popBackStackIfPossible() },
                 onLogout = {
                     navController.navigate(LoginDestination) {
                         popUpTo(navController.graph.id) { inclusive = true }
@@ -132,9 +156,45 @@ fun AppNavHost(
             )
         }
         composable<ImagesDestination> {
+            val scope = rememberCoroutineScope()
+            val currentUserId = firebaseAuth.currentUser?.uid ?: ""
+            val chatRepository = remember {
+                ChatRepositoryImpl(AppDatabase.getInstance(context.applicationContext).chatDao())
+            }
+            val newChatTitle = stringResource(R.string.chats_new_chat)
             ImagesScreen(
-                onBack = { navController.popBackStack() },
+                selectedDrawerItem = DrawerMenuItem.Images,
+                onDrawerNavigate = { item ->
+                    handleDrawerNavigation(
+                        navController = navController,
+                        scope = scope,
+                        chatRepository = chatRepository,
+                        userId = currentUserId,
+                        newChatTitle = newChatTitle,
+                        item = item,
+                    )
+                },
+                onBack = { navController.popBackStackIfPossible() },
             )
         }
+    }
+}
+
+private fun handleDrawerNavigation(
+    navController: NavController,
+    scope: CoroutineScope,
+    chatRepository: ChatRepository,
+    userId: String,
+    newChatTitle: String,
+    item: DrawerMenuItem,
+) {
+    when (item) {
+        DrawerMenuItem.NewChat -> scope.launch {
+            val id = chatRepository.createChat(userId, newChatTitle)
+            navController.navigate(ChatDestination(chatId = id)) {
+                popUpTo<ChatsDestination> { inclusive = false }
+            }
+        }
+        else -> navController.navigateDrawerItem(item)
     }
 }
