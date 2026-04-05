@@ -14,16 +14,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.example.gigachataiassistant.R
 import com.example.gigachataiassistant.navigation.DrawerMenuItem
 import com.example.gigachataiassistant.ui.navigation.MainModalNavigationDrawer
+import com.example.gigachataiassistant.ui.theme.ChatInputRowBottomPadding
+import com.example.gigachataiassistant.ui.theme.ScreenTopBarTitleStyle
+import com.example.gigachataiassistant.ui.theme.topAppBarContentColor
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,9 +48,17 @@ fun ImagesScreen(
         },
     ) {
         Scaffold(
+            containerColor = MaterialTheme.colorScheme.background,
             topBar = {
+                val barColor = topAppBarContentColor()
                 TopAppBar(
-                    title = { Text(stringResource(R.string.images_title)) },
+                    title = {
+                        Text(
+                            text = stringResource(R.string.images_title),
+                            style = ScreenTopBarTitleStyle,
+                            color = barColor,
+                        )
+                    },
                     navigationIcon = {
                         IconButton(
                             onClick = { scope.launch { drawerState.open() } },
@@ -55,6 +66,7 @@ fun ImagesScreen(
                             Icon(
                                 imageVector = Icons.Default.Menu,
                                 contentDescription = stringResource(R.string.nav_drawer_open_menu),
+                                tint = barColor,
                             )
                         }
                     },
@@ -63,9 +75,16 @@ fun ImagesScreen(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = stringResource(R.string.chat_cd_back),
+                                tint = barColor,
                             )
                         }
                     },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                        navigationIconContentColor = barColor,
+                        titleContentColor = barColor,
+                        actionIconContentColor = barColor,
+                    ),
                 )
             },
         ) { paddingValues ->
@@ -73,7 +92,7 @@ fun ImagesScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .padding(24.dp),
+                    .padding(ChatInputRowBottomPadding),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(

@@ -21,7 +21,6 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Palette
@@ -35,12 +34,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -55,15 +54,49 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
 import com.example.gigachataiassistant.R
 import com.example.gigachataiassistant.data.settings.AppTheme
 import com.example.gigachataiassistant.navigation.DrawerMenuItem
+import com.example.gigachataiassistant.ui.components.AuthGroupedProfileFields
 import com.example.gigachataiassistant.ui.navigation.MainModalNavigationDrawer
+import com.example.gigachataiassistant.ui.theme.AppAuthGroupedFieldStrokeDark
+import com.example.gigachataiassistant.ui.theme.AppAuthGroupedFieldStrokeLight
+import com.example.gigachataiassistant.ui.theme.AppAuthInputLabelDark
+import com.example.gigachataiassistant.ui.theme.AppAuthInputLabelLight
+import com.example.gigachataiassistant.ui.theme.AppBackgroundDark
+import com.example.gigachataiassistant.ui.theme.AuthInputLabelTextStyle
+import com.example.gigachataiassistant.ui.theme.AuthInputStrokeWidth
+import com.example.gigachataiassistant.ui.theme.AuthPrimaryButtonHeight
+import com.example.gigachataiassistant.ui.theme.AuthPrimaryButtonTextStyle
+import com.example.gigachataiassistant.ui.theme.AuthPrimaryButtonsSpacing
+import com.example.gigachataiassistant.ui.theme.AuthScreenHorizontalPadding
+import com.example.gigachataiassistant.ui.theme.ChatInputRowBottomPadding
+import com.example.gigachataiassistant.ui.theme.ChatListAccentIconDark
+import com.example.gigachataiassistant.ui.theme.ChatListAccentIconLight
+import com.example.gigachataiassistant.ui.theme.ChatListCardDateDark
+import com.example.gigachataiassistant.ui.theme.ChatListCardDateLight
+import com.example.gigachataiassistant.ui.theme.ChatListCardDateStyle
+import com.example.gigachataiassistant.ui.theme.ChatListCardTitleDark
+import com.example.gigachataiassistant.ui.theme.ChatListCardTitleLight
+import com.example.gigachataiassistant.ui.theme.ChatListCardSpacing
+import com.example.gigachataiassistant.ui.theme.ChatListCardTitleStyle
+import com.example.gigachataiassistant.ui.theme.CircularProgressStrokeWidth
+import com.example.gigachataiassistant.ui.theme.CircularProgressStrokeWidthEmphasis
+import com.example.gigachataiassistant.ui.theme.NavDrawerItemHorizontalPadding
+import com.example.gigachataiassistant.ui.theme.ProfileAvatarLoadingProgressSize
+import com.example.gigachataiassistant.ui.theme.ProfileAvatarOverlayProgressSize
+import com.example.gigachataiassistant.ui.theme.ProfileAvatarSize
+import com.example.gigachataiassistant.ui.theme.ProfileQuotaEntrySpacing
+import com.example.gigachataiassistant.ui.theme.ProfileRetryButtonTopSpacing
+import com.example.gigachataiassistant.ui.theme.ProfileSectionPaddingTight
+import com.example.gigachataiassistant.ui.theme.ScreenTopBarTitleStyle
+import com.example.gigachataiassistant.ui.theme.StandardIconSize
+import com.example.gigachataiassistant.ui.theme.ThemeAlpha
+import com.example.gigachataiassistant.ui.theme.ThemeSelectorRowHeight
+import com.example.gigachataiassistant.ui.theme.topAppBarContentColor
 import com.example.gigachataiassistant.ui.profile.ProfileGigaChatQuotaState
 import com.example.gigachataiassistant.ui.profile.ProfileViewModel
 import kotlinx.coroutines.launch
@@ -76,7 +109,6 @@ fun ProfileScreen(
     viewModel: ProfileViewModel,
     selectedDrawerItem: DrawerMenuItem,
     onDrawerNavigate: (DrawerMenuItem) -> Unit,
-    onBack: () -> Unit,
     onLogout: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -101,9 +133,17 @@ fun ProfileScreen(
         },
     ) {
         Scaffold(
+            containerColor = MaterialTheme.colorScheme.background,
             topBar = {
+                val barColor = topAppBarContentColor()
                 TopAppBar(
-                    title = { Text(stringResource(R.string.profile_title)) },
+                    title = {
+                        Text(
+                            text = stringResource(R.string.profile_title),
+                            style = ScreenTopBarTitleStyle,
+                            color = barColor,
+                        )
+                    },
                     navigationIcon = {
                         IconButton(
                             onClick = { scope.launch { drawerState.open() } },
@@ -111,32 +151,43 @@ fun ProfileScreen(
                             Icon(
                                 imageVector = Icons.Default.Menu,
                                 contentDescription = stringResource(R.string.nav_drawer_open_menu),
+                                tint = barColor,
                             )
                         }
                     },
                     actions = {
-                        IconButton(onClick = onBack) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(R.string.chat_cd_back),
-                            )
-                        }
                         if (!uiState.isEditing) {
                             TextButton(
                                 onClick = { viewModel.toggleEditing() },
                                 enabled = !uiState.isPhotoUploading,
+                                colors = ButtonDefaults.textButtonColors(contentColor = barColor),
                             ) {
-                                Text(stringResource(R.string.profile_edit_action))
+                                Text(
+                                    stringResource(R.string.profile_edit_action),
+                                    style = AuthPrimaryButtonTextStyle,
+                                    color = barColor,
+                                )
                             }
                         } else {
                             TextButton(
                                 onClick = { viewModel.updateProfile(editedName) },
                                 enabled = !uiState.isLoading && !uiState.isPhotoUploading,
+                                colors = ButtonDefaults.textButtonColors(contentColor = barColor),
                             ) {
-                                Text(stringResource(R.string.profile_save_action))
+                                Text(
+                                    stringResource(R.string.profile_save_action),
+                                    style = AuthPrimaryButtonTextStyle,
+                                    color = barColor,
+                                )
                             }
                         }
                     },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                        navigationIconContentColor = barColor,
+                        titleContentColor = barColor,
+                        actionIconContentColor = barColor,
+                    ),
                 )
             },
         ) { paddingValues ->
@@ -145,13 +196,14 @@ fun ProfileScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
                     .verticalScroll(rememberScrollState())
-                    .padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp),
+                    .padding(horizontal = AuthScreenHorizontalPadding)
+                    .padding(top = AuthPrimaryButtonsSpacing, bottom = ChatInputRowBottomPadding),
+                verticalArrangement = Arrangement.spacedBy(AuthPrimaryButtonsSpacing),
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(AuthPrimaryButtonsSpacing),
                 ) {
                     ProfileAvatarPhoto(
                         photoUrl = user?.photoUrl?.toString(),
@@ -163,112 +215,128 @@ fun ProfileScreen(
                             )
                         },
                     )
-                    if (uiState.isEditing) {
-                        OutlinedTextField(
-                            value = editedName,
-                            onValueChange = { editedName = it },
-                            label = { Text(stringResource(R.string.profile_name_label)) },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            enabled = !uiState.isLoading && !uiState.isPhotoUploading,
-                        )
-                    }
                 }
 
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    if (!uiState.isEditing) {
-                        ProfileLabeledValue(
-                            label = stringResource(R.string.profile_name_label),
-                            value = user?.displayName?.ifBlank { "—" } ?: "—",
+                AuthGroupedProfileFields(
+                    name = if (uiState.isEditing) {
+                        editedName
+                    } else {
+                        user?.displayName?.ifBlank { "—" } ?: "—"
+                    },
+                    onNameChange = { editedName = it },
+                    nameEditable = uiState.isEditing,
+                    nameEnabled = !uiState.isLoading && !uiState.isPhotoUploading,
+                    email = user?.email ?: "—",
+                    phone = phone,
+                    balanceContent = {
+                        ProfileGigaChatQuotaSection(
+                            state = uiState.gigaChatQuota,
+                            onRetry = { viewModel.refreshGigaChatQuota() },
                         )
-                    }
-                    ProfileLabeledValue(
-                        label = stringResource(R.string.profile_email_label),
-                        value = user?.email ?: "—",
-                    )
-                    phone?.let {
-                        ProfileLabeledValue(
-                            label = stringResource(R.string.profile_phone_label),
-                            value = it,
-                        )
-                    }
-                    ProfileGigaChatQuotaSection(
-                        state = uiState.gigaChatQuota,
-                        onRetry = { viewModel.refreshGigaChatQuota() },
-                    )
-                }
+                    },
+                )
 
-                HorizontalDivider()
+                ProfileDivider()
 
                 uiState.errorMessageId?.let { errId ->
                     Text(
                         text = stringResource(errId),
                         color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
+                        style = ChatListCardDateStyle,
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
 
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Palette,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                        Text(
-                            text = stringResource(R.string.profile_theme_label),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                    }
-
+                Column(verticalArrangement = Arrangement.spacedBy(AuthPrimaryButtonsSpacing)) {
+                    ProfileThemeSectionHeader()
                     ThemeSelector(
                         currentTheme = uiState.currentTheme,
                         onThemeSelected = { viewModel.setTheme(it) },
                     )
                 }
 
-                Spacer(modifier = Modifier.weight(1f))
-
                 if (!uiState.isEditing) {
+                    val onErrorContainer = MaterialTheme.colorScheme.onErrorContainer
+                    val errorContainer = MaterialTheme.colorScheme.errorContainer
                     Button(
                         onClick = { viewModel.signOut(onSuccess = onLogout) },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer,
-                            contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(AuthPrimaryButtonHeight),
                         enabled = !uiState.isLoading && !uiState.isPhotoUploading,
-                        shape = MaterialTheme.shapes.medium,
+                        shape = ButtonDefaults.shape,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = errorContainer,
+                            contentColor = onErrorContainer,
+                            disabledContainerColor = errorContainer.copy(alpha = ThemeAlpha.DisabledComponentAlpha),
+                            disabledContentColor = onErrorContainer.copy(alpha = ThemeAlpha.DisabledComponentAlpha),
+                        ),
                     ) {
                         if (uiState.isLoading) {
                             CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                strokeWidth = 2.dp,
-                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                modifier = Modifier.size(StandardIconSize),
+                                strokeWidth = CircularProgressStrokeWidth,
+                                color = onErrorContainer,
                             )
                         } else {
-                            Text(stringResource(R.string.action_logout))
+                            Text(
+                                text = stringResource(R.string.action_logout),
+                                style = AuthPrimaryButtonTextStyle,
+                                color = onErrorContainer,
+                            )
                         }
                     }
                 } else {
                     OutlinedButton(
                         onClick = { viewModel.toggleEditing() },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(AuthPrimaryButtonHeight),
                         enabled = !uiState.isLoading && !uiState.isPhotoUploading,
                     ) {
-                        Text(stringResource(R.string.profile_cancel_action))
+                        Text(
+                            text = stringResource(R.string.profile_cancel_action),
+                            style = AuthPrimaryButtonTextStyle,
+                        )
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ProfileDivider() {
+    val stroke = if (MaterialTheme.colorScheme.background == AppBackgroundDark) {
+        AppAuthGroupedFieldStrokeDark
+    } else {
+        AppAuthGroupedFieldStrokeLight
+    }
+    HorizontalDivider(
+        thickness = AuthInputStrokeWidth,
+        color = stroke,
+    )
+}
+
+@Composable
+private fun ProfileThemeSectionHeader() {
+    val isDark = MaterialTheme.colorScheme.background == AppBackgroundDark
+    val iconTint = if (isDark) ChatListAccentIconDark else ChatListAccentIconLight
+    val titleColor = if (isDark) ChatListCardTitleDark else ChatListCardTitleLight
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(ChatListCardSpacing),
+    ) {
+        Icon(
+            imageVector = Icons.Default.Palette,
+            contentDescription = null,
+            tint = iconTint,
+        )
+        Text(
+            text = stringResource(R.string.profile_theme_label),
+            style = ChatListCardTitleStyle,
+            color = titleColor,
+        )
     }
 }
 
@@ -282,7 +350,7 @@ private fun ProfileAvatarPhoto(
     val url = photoUrl?.takeIf { it.isNotBlank() }
     Box(
         modifier = Modifier
-            .size(100.dp)
+            .size(ProfileAvatarSize)
             .clip(CircleShape)
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
@@ -295,7 +363,7 @@ private fun ProfileAvatarPhoto(
                 contentScale = ContentScale.Crop,
                 loading = {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(modifier = Modifier.size(32.dp))
+                        CircularProgressIndicator(modifier = Modifier.size(ProfileAvatarLoadingProgressSize))
                     }
                 },
                 error = {
@@ -303,7 +371,11 @@ private fun ProfileAvatarPhoto(
                         imageVector = Icons.Default.AccountCircle,
                         contentDescription = stringResource(R.string.profile_cd_avatar),
                         modifier = Modifier.fillMaxSize(),
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = if (MaterialTheme.colorScheme.background == AppBackgroundDark) {
+                            ChatListAccentIconDark
+                        } else {
+                            ChatListAccentIconLight
+                        },
                     )
                 },
                 success = { SubcomposeAsyncImageContent() },
@@ -313,19 +385,25 @@ private fun ProfileAvatarPhoto(
                 imageVector = Icons.Default.AccountCircle,
                 contentDescription = stringResource(R.string.profile_cd_avatar),
                 modifier = Modifier.fillMaxSize(),
-                tint = MaterialTheme.colorScheme.primary,
+                tint = if (MaterialTheme.colorScheme.background == AppBackgroundDark) {
+                    ChatListAccentIconDark
+                } else {
+                    ChatListAccentIconLight
+                },
             )
         }
         if (isUploading) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f)),
+                    .background(
+                        MaterialTheme.colorScheme.scrim.copy(alpha = ThemeAlpha.ProfileAvatarUploadOverlayAlpha),
+                    ),
                 contentAlignment = Alignment.Center,
             ) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(40.dp),
-                    strokeWidth = 3.dp,
+                    modifier = Modifier.size(ProfileAvatarOverlayProgressSize),
+                    strokeWidth = CircularProgressStrokeWidthEmphasis,
                 )
             }
         }
@@ -337,6 +415,10 @@ private fun ProfileGigaChatQuotaSection(
     state: ProfileGigaChatQuotaState,
     onRetry: () -> Unit,
 ) {
+    val isDark = MaterialTheme.colorScheme.background == AppBackgroundDark
+    val labelColor = if (isDark) AppAuthInputLabelDark else AppAuthInputLabelLight
+    val bodyMuted = if (isDark) ChatListCardDateDark else ChatListCardDateLight
+    val bodyEmphasis = if (isDark) ChatListCardTitleDark else ChatListCardTitleLight
     val numberFormat = remember {
         NumberFormat.getNumberInstance(Locale.forLanguageTag("ru-RU")).apply {
             maximumFractionDigits = 6
@@ -346,23 +428,24 @@ private fun ProfileGigaChatQuotaSection(
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = stringResource(R.string.profile_tokens_label),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = AuthInputLabelTextStyle,
+            color = labelColor,
         )
         when (state) {
             ProfileGigaChatQuotaState.Loading -> {
                 Row(
-                    modifier = Modifier.padding(top = 8.dp),
+                    modifier = Modifier.padding(top = ProfileRetryButtonTopSpacing),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(ChatListCardSpacing),
                 ) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(StandardIconSize),
+                        strokeWidth = CircularProgressStrokeWidth,
                     )
                     Text(
                         text = stringResource(R.string.profile_tokens_loading),
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = ChatListCardDateStyle,
+                        color = bodyMuted,
                     )
                 }
             }
@@ -370,20 +453,20 @@ private fun ProfileGigaChatQuotaSection(
                 if (state.entries.isEmpty()) {
                     Text(
                         text = stringResource(R.string.profile_tokens_empty),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(top = 4.dp),
+                        style = ChatListCardDateStyle,
+                        color = bodyMuted,
+                        modifier = Modifier.padding(top = ProfileSectionPaddingTight),
                     )
                 } else {
                     Column(
-                        modifier = Modifier.padding(top = 4.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.padding(top = ProfileSectionPaddingTight),
+                        verticalArrangement = Arrangement.spacedBy(ProfileQuotaEntrySpacing),
                     ) {
                         state.entries.forEach { entry ->
                             Text(
                                 text = "${entry.usage}: ${numberFormat.format(entry.value)}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium,
+                                style = ChatListCardTitleStyle,
+                                color = bodyEmphasis,
                             )
                         }
                     }
@@ -392,19 +475,28 @@ private fun ProfileGigaChatQuotaSection(
             ProfileGigaChatQuotaState.NotAvailable -> {
                 Text(
                     text = stringResource(R.string.profile_tokens_pay_as_you_go),
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(top = 4.dp),
+                    style = ChatListCardDateStyle,
+                    color = bodyMuted,
+                    modifier = Modifier.padding(top = ProfileSectionPaddingTight),
                 )
             }
             is ProfileGigaChatQuotaState.Error -> {
-                Column(modifier = Modifier.padding(top = 4.dp)) {
+                Column(modifier = Modifier.padding(top = ProfileSectionPaddingTight)) {
                     Text(
                         text = stringResource(state.messageId),
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = ChatListCardDateStyle,
                         color = MaterialTheme.colorScheme.error,
                     )
-                    TextButton(onClick = onRetry) {
-                        Text(stringResource(R.string.action_retry))
+                    TextButton(
+                        onClick = onRetry,
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.primary,
+                        ),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.action_retry),
+                            style = AuthPrimaryButtonTextStyle,
+                        )
                     }
                 }
             }
@@ -413,31 +505,12 @@ private fun ProfileGigaChatQuotaSection(
 }
 
 @Composable
-private fun ProfileLabeledValue(
-    label: String,
-    value: String,
-    valueStyle: TextStyle = MaterialTheme.typography.bodyLarge,
-) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Text(
-            text = value,
-            style = valueStyle,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.padding(top = 4.dp),
-        )
-    }
-}
-
-@Composable
 private fun ThemeSelector(
     currentTheme: AppTheme,
     onThemeSelected: (AppTheme) -> Unit,
 ) {
+    val isDark = MaterialTheme.colorScheme.background == AppBackgroundDark
+    val textColor = if (isDark) ChatListCardTitleDark else ChatListCardTitleLight
     val options = listOf(
         AppTheme.SYSTEM to stringResource(R.string.profile_theme_system),
         AppTheme.LIGHT to stringResource(R.string.profile_theme_light),
@@ -449,13 +522,12 @@ private fun ThemeSelector(
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
+                    .height(ThemeSelectorRowHeight)
                     .selectable(
                         selected = (theme == currentTheme),
                         onClick = { onThemeSelected(theme) },
                         role = Role.RadioButton,
-                    )
-                    .padding(horizontal = 8.dp),
+                    ),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 RadioButton(
@@ -464,8 +536,9 @@ private fun ThemeSelector(
                 )
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(start = 16.dp),
+                    style = ChatListCardTitleStyle,
+                    color = textColor,
+                    modifier = Modifier.padding(start = NavDrawerItemHorizontalPadding),
                 )
             }
         }

@@ -13,11 +13,11 @@ interface ChatDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(chat: ChatEntity)
 
-    @Query("SELECT * FROM chats WHERE userId = :userId ORDER BY createdAt DESC")
+    @Query("SELECT * FROM chats WHERE userId = :userId ORDER BY lastActivityAt DESC")
     fun pagingSourceAll(userId: String): PagingSource<Int, ChatEntity>
 
     @Query(
-        "SELECT * FROM chats WHERE userId = :userId AND title LIKE '%' || :query || '%' COLLATE NOCASE ORDER BY createdAt DESC",
+        "SELECT * FROM chats WHERE userId = :userId AND title LIKE '%' || :query || '%' COLLATE NOCASE ORDER BY lastActivityAt DESC",
     )
     fun pagingSourceByTitle(userId: String, query: String): PagingSource<Int, ChatEntity>
 
@@ -29,4 +29,13 @@ interface ChatDao {
 
     @Query("UPDATE chats SET title = :title WHERE id = :chatId AND userId = :userId")
     suspend fun updateTitle(chatId: String, userId: String, title: String)
+
+    @Query("UPDATE chats SET lastActivityAt = :timeMillis WHERE id = :chatId")
+    suspend fun updateLastActivity(chatId: String, timeMillis: Long)
+
+    @Query("DELETE FROM chats WHERE userId = :userId")
+    suspend fun deleteAllForUser(userId: String)
+
+    @Query("DELETE FROM chats WHERE id = :chatId AND userId = :userId")
+    suspend fun deleteById(chatId: String, userId: String)
 }

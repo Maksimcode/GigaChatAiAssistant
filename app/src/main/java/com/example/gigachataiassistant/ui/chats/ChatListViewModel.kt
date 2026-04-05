@@ -28,6 +28,9 @@ class ChatListViewModel(
 
     private val appliedQueryInternal = MutableStateFlow("")
 
+    /** Учитывается в запросе к БД (после debounce / applySearch). */
+    val appliedSearchQuery: StateFlow<String> = appliedQueryInternal.asStateFlow()
+
     init {
         viewModelScope.launch {
             searchInputInternal
@@ -53,6 +56,18 @@ class ChatListViewModel(
 
     suspend fun createNewChat(title: String = "Новый чат"): String =
         repository.createChat(userId, title)
+
+    fun clearAllChats() {
+        viewModelScope.launch {
+            repository.deleteAllChatsForUser(userId)
+        }
+    }
+
+    fun deleteChat(chatId: String) {
+        viewModelScope.launch {
+            repository.deleteChat(chatId, userId)
+        }
+    }
 
     companion object {
         private const val SEARCH_DEBOUNCE_MS = 300L

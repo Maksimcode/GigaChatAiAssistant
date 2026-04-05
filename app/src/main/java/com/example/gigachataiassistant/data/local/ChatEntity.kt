@@ -16,4 +16,5 @@ data class ChatEntity(
     val userId: String,
     val title: String,
     val createdAt: Long,
+    val lastActivityAt: Long,
 )

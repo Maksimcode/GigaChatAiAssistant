@@ -15,4 +15,8 @@ interface ChatRepository {
     suspend fun getChat(chatId: String, userId: String): ChatEntity?
 
     suspend fun updateChatTitle(chatId: String, userId: String, title: String)
+
+    suspend fun deleteAllChatsForUser(userId: String)
+
+    suspend fun deleteChat(chatId: String, userId: String)
 }
