@@ -10,9 +10,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -32,6 +30,8 @@ fun ProfileScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    var editedName by remember(uiState.user) { mutableStateOf(uiState.user?.displayName ?: "") }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -44,6 +44,20 @@ fun ProfileScreen(
                         )
                     }
                 },
+                actions = {
+                    if (!uiState.isEditing) {
+                        TextButton(onClick = { viewModel.toggleEditing() }) {
+                            Text(stringResource(R.string.profile_edit_action))
+                        }
+                    } else {
+                        TextButton(
+                            onClick = { viewModel.updateProfile(editedName) },
+                            enabled = !uiState.isLoading
+                        ) {
+                            Text(stringResource(R.string.profile_save_action))
+                        }
+                    }
+                }
             )
         },
     ) { paddingValues ->
@@ -63,24 +77,43 @@ fun ProfileScreen(
                 Icon(
                     imageVector = Icons.Default.AccountCircle,
                     contentDescription = stringResource(R.string.profile_cd_avatar),
-                    modifier = Modifier.size(80.dp),
+                    modifier = Modifier.size(100.dp),
                     tint = MaterialTheme.colorScheme.primary
                 )
-                
+
+                if (uiState.isEditing) {
+                    OutlinedTextField(
+                        value = editedName,
+                        onValueChange = { editedName = it },
+                        label = { Text(stringResource(R.string.profile_name_label)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                } else {
+                    Text(
+                        text = uiState.user?.displayName?.ifBlank { "—" } ?: "—",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
                 Text(
                     text = uiState.user?.email ?: "...",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
-                )
-                
-                Text(
-                    text = stringResource(R.string.profile_email_label),
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             HorizontalDivider()
+
+            uiState.error?.let {
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
 
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Row(
@@ -107,24 +140,34 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            Button(
-                onClick = { viewModel.signOut(onSuccess = onLogout) },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                    contentColor = MaterialTheme.colorScheme.onErrorContainer
-                ),
-                enabled = !uiState.isLoading,
-                shape = MaterialTheme.shapes.medium
-            ) {
-                if (uiState.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        strokeWidth = 2.dp,
-                        color = MaterialTheme.colorScheme.onErrorContainer
-                    )
-                } else {
-                    Text(stringResource(R.string.action_logout))
+            if (!uiState.isEditing) {
+                Button(
+                    onClick = { viewModel.signOut(onSuccess = onLogout) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer
+                    ),
+                    enabled = !uiState.isLoading,
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    if (uiState.isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    } else {
+                        Text(stringResource(R.string.action_logout))
+                    }
+                }
+            } else {
+                OutlinedButton(
+                    onClick = { viewModel.toggleEditing() },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !uiState.isLoading
+                ) {
+                    Text(stringResource(R.string.profile_cancel_action))
                 }
             }
         }
